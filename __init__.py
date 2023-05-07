@@ -70,18 +70,34 @@ class OBJECT_OT_EditModeToggle(bpy.types.Operator):
         if obj.mode == 'EDIT':
             bpy.ops.object.editmode_toggle()
         else:
-            shape_key_data.active_shape_key_index = self.index
+            obj.active_shape_key_index = self.index
             bpy.ops.object.editmode_toggle()
+
+        return {'FINISHED'}
+
+class OBJECT_OT_ShapeKeyRemove(bpy.types.Operator):
+    bl_idname = "object.shape_key_remove"
+    bl_label = "Remove Shape Key"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    index: bpy.props.IntProperty()
+
+    def execute(self, context):
+        obj = context.object
+        shape_key_data = obj.data.shape_keys
+        shape_key_data.key_blocks.remove(shape_key_data.key_blocks[self.index])
 
         return {'FINISHED'}
 
 def register():
     bpy.utils.register_class(OBJECT_PT_CustomShapeKeysPanel)
     bpy.utils.register_class(OBJECT_OT_EditModeToggle)
+    bpy.utils.register_class(OBJECT_OT_ShapeKeyRemove)
 
 def unregister():
-    bpy.utils.unregister_class(OBJECT_PT_CustomShapeKeysPanel)
+    bpy.utils.unregister_class(OBJECT_OT_ShapeKeyRemove)
     bpy.utils.unregister_class(OBJECT_OT_EditModeToggle)
+    bpy.utils.unregister_class(OBJECT_PT_CustomShapeKeysPanel)
 
 if __name__ == "__main__":
     register()
