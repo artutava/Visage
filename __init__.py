@@ -1,87 +1,69 @@
 bl_info = {
-    "name": "Custom Shape Keys Panel",
-    "blender": (2, 93, 0),
+    "name": "Visage",
+    "blender": (3, 3, 0),
     "category": "Object",
 }
 
 import bpy
 
-class OBJECT_PT_CustomShapeKeysPanel(bpy.types.Panel):
-    bl_label = "FC Shape Keys"
-    bl_idname = "OBJECT_PT_custom_shape_keys"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'FC Shape Keys'
+class OBJECT_PT_Visage_Panel(bpy.types.Panel):
+    bl_label = "Visage"
+    bl_idname = "OBJECT_PT_visage_panel"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "Visage"
 
     @classmethod
     def poll(cls, context):
-        obj = context.object
-        return obj is not None and obj.type == 'MESH' and obj.data.shape_keys is not None
+        return context.object is not None
 
     def draw(self, context):
         layout = self.layout
         obj = context.object
         shape_key_data = obj.data.shape_keys
-        shape_keys = shape_key_data.key_blocks
 
-        # Add shape key button
-        row = layout.row()
-        row.operator("object.shape_key_add", text="Add Shape Key").from_mix = False
+        if shape_key_data is not None:
+            box = layout.box()
+            col = box.column()
 
-        for shape_key in shape_keys:
-            if shape_key.name.startswith("FC_"):
-                row = layout.row(align=True)
-
-                # Shape key name
-                row.prop(shape_key, "name", text="")
-                # Shape key value slider
-                row.prop(shape_key, "value", text="")
-                # Shape key mute (lock) toggle
-                row.prop(shape_key, "mute", text="", icon="LOCKED" if shape_key.mute else "UNLOCKED")
-                # Edit mode toggle
-                if obj.mode == 'EDIT' and obj.active_shape_key == shape_key:
-                    row.operator("object.editmode_toggle", text="", icon="SHAPEKEY_DATA")
-                else:
-                    op = row.operator("object.editmode_toggle", text="", icon="EDITMODE_HLT")
+            for shape_key in shape_key_data.key_blocks:
+                if shape_key.name.startswith("FC_"):
+                    row = col.row(align=True)
+                    row.prop(shape_key, "value", text=shape_key.name)
+                    
+                    op = row.operator("object.shape_key_remove", text="", icon="X")
+                    op.all_unlocked = False
+                    op.lock = False
+                    op.type = 'REMOVE'
+                    op.relative = False
+                    op.absolute = False
                     op.index = shape_key_data.key_blocks.find(shape_key.name)
 
-                # Remove shape key button
-                op = row.operator("object.shape_key_remove", text="", icon="X")
-                op.index = shape_key_data.key_blocks.find(shape_key.name)
+                    row = col.row(align=True)
+                    row.prop(shape_key, "interpolation", text="Interpolation")
+                    row.prop(shape_key, "mute", text="", icon="HIDE_OFF")
 
-        # Other shape key options
-        if shape_key_data.use_relative:
-            layout.prop(shape_key_data, "eval_time", text="Evaluation Time")
-        else:
-            layout.prop(shape_key_data, "slider_min", text="Range Min")
-            layout.prop(shape_key_data, "slider_max", text="Range Max")
+                    row = col.row(align=True)
+                    row.operator("object.shape_key_add", text="Add Shape Key", icon="ADD")
+                    row.operator("object.shape_key_remove", text="Remove Shape Key", icon="REMOVE")
 
-class OBJECT_OT_EditModeToggle(bpy.types.Operator):
-    bl_idname = "object.editmode_toggle"
-    bl_label = "Toggle Edit Mode"
-    bl_options = {'REGISTER', 'UNDO'}
+                    row = col.row(align=True)
+                    row.operator("object.shape_key_mirror", text="Mirror Shape Key", icon="ARROW_LEFTRIGHT")
+                    row.operator("object.shape_key_move", text="Move Shape Key", icon="ARROW_UP_DOWN")
 
-    index: bpy.props.IntProperty()
+                    row = col.row(align=True)
+                    row.operator("object.shape_key_clear", text="Clear Shape Key", icon="LOOP_BACK")
+                    row.operator("object.shape_key_retime", text="Retiming Shape Key", icon="TIME")
 
-    def execute(self, context):
-        obj = context.object
-        shape_key_data = obj.data.shape_keys
-
-        if obj.mode == 'EDIT':
-            bpy.ops.object.editmode_toggle()
-        else:
-            shape_key_data.active_shape_key_index = self.index
-            bpy.ops.object.editmode_toggle()
-
-        return {'FINISHED'}
+                    row = col.row(align=True)
+                    row.operator("object.shape_key_transfer", text="Transfer Shape Key", icon="COPY_ID")
+                    row.operator("object.shape_key_copy", text="Copy Shape Key", icon="COPYDOWN")
 
 def register():
-    bpy.utils.register_class(OBJECT_PT_CustomShapeKeysPanel)
-    bpy.utils.register_class(OBJECT_OT_EditModeToggle)
+    bpy.utils.register_class(OBJECT_PT_Visage_Panel)
 
 def unregister():
-    bpy.utils.unregister_class(OBJECT_PT_CustomShapeKeysPanel)
-    bpy.utils.unregister_class(OBJECT_OT_EditModeToggle)
+    bpy.utils.unregister_class(OBJECT_PT_Visage_Panel)
 
 if __name__ == "__main__":
     register()
