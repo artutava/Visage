@@ -11,6 +11,12 @@ from bpy.types import Panel, UIList, Operator
 class OBJECT_UL_CustomShapeKeyList(UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
         shape_key = item
+        obj = context.object
+
+        if obj.custom_shape_key_fc_filter and not shape_key.name.startswith("FC_"):
+            return
+        if obj.custom_shape_key_non_fc_filter and shape_key.name.startswith("FC_"):
+            return
         
         layout.prop(shape_key, "name", text="", emboss=False)
         layout.prop(shape_key, "value", text="")
@@ -38,6 +44,11 @@ class OBJECT_PT_CustomShapeKeysPanel(Panel):
         obj = context.object
         shape_key_data = obj.data.shape_keys
         shape_keys = shape_key_data.key_blocks
+
+        # Add toggle buttons
+        row = layout.row()
+        row.prop(obj, "custom_shape_key_fc_filter", toggle=True, text="Show FC Shape Keys")
+        row.prop(obj, "custom_shape_key_non_fc_filter", toggle=True, text="Show Non-FC Shape Keys")
 
         # Add shape key button
         row = layout.row()
@@ -91,6 +102,9 @@ def register():
     bpy.utils.register_class(OBJECT_OT_ShapeKeyRemove)
     bpy.types.Object.custom_shape_key_list_index = IntProperty()
     bpy.types.Object.custom_shape_key_filter = StringProperty()
+    bpy.types.Object.custom_shape_key_fc_filter = bpy.props.BoolProperty(name="FC Filter", default=False)
+    bpy.types.Object.custom_shape_key_non_fc_filter = bpy.props.BoolProperty(name="Non-FC Filter", default=False)
+
 
 def unregister():
     bpy.utils.unregister_class(OBJECT_OT_ShapeKeyRemove)
@@ -99,6 +113,9 @@ def unregister():
     bpy.utils.unregister_class(OBJECT_UL_CustomShapeKeyList)
     del bpy.types.Object.custom_shape_key_list_index
     del bpy.types.Object.custom_shape_key_filter
+    del bpy.types.Object.custom_shape_key_fc_filter
+    del bpy.types.Object.custom_shape_key_non_fc_filter
+
 
 if __name__ == "main":
     register()
