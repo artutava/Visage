@@ -102,7 +102,7 @@ def unregister():
     del bpy.types.Object.custom_shape_key_list_index
     del bpy.types.Object.custom_shape_key_filter
 
-if __name__ == "__main__":
+if name == "main":
     register()
 
 
