@@ -12,13 +12,15 @@ class OBJECT_UL_CustomShapeKeyList(UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
         shape_key = item
         obj = context.object
+        shape_key_data = obj.data.shape_keys
 
         if obj.custom_shape_key_fc_filter and not shape_key.name.startswith("FC_"):
             return
         if obj.custom_shape_key_non_fc_filter and shape_key.name.startswith("FC_"):
             return
         
-        layout.prop(shape_key, "name", text="", emboss=False)
+        # Add selectable shape key property
+        layout.prop(shape_key, "name", text="", emboss=False, icon='SHAPEKEY_DATA')
         layout.prop(shape_key, "value", text="")
         layout.prop(shape_key, "mute", text="", icon="LOCKED" if shape_key.mute else "UNLOCKED")
         icon = "PINNED" if context.object.show_only_shape_key else "UNPINNED"
@@ -26,6 +28,11 @@ class OBJECT_UL_CustomShapeKeyList(UIList):
         op.index = data.key_blocks.find(shape_key.name)
         op = layout.operator("object.shape_key_remove", text="", icon="X")
         op.index = data.key_blocks.find(shape_key.name)
+
+        # Add a hidden property to make shape key selectable
+        layout.active = shape_key_data.key_blocks.active_index == data.key_blocks.find(shape_key.name)
+        layout.prop(shape_key_data, "active_shape_key_index", text="", index=data.key_blocks.find(shape_key.name), emboss=False)
+
 
 class OBJECT_PT_CustomShapeKeysPanel(Panel):
     bl_label = "FC Shape Keys"
